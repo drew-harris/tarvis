@@ -83,7 +83,7 @@ const handleTarvisMessage = async (message: Message) => {
 client.on("messageCreate", async (m: Message) => {
   console.log("message created");
   console.log(m.content);
-  if (m.content.startsWith("hey tarvis")) {
+  if (m.content.startsWith("hey tarvis") || m.content.startsWith("tarvis")) {
     await messageStorage.run(m, async () => {
       await handleTarvisMessage(m);
     });

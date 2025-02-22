@@ -3,7 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/pg": "^8.11.11",
+    "drizzle-kit": "^0.30.4"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -16,7 +18,9 @@
     "@openrouter/ai-sdk-provider": "^0.2.2",
     "ai": "^4.1.45",
     "discord.js": "^14.18.0",
+    "drizzle-orm": "^0.39.3",
     "openai": "^4.85.3",
+    "pg": "^8.13.3",
     "zod": "^3.24.2"
   }
 }
