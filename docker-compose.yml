@@ -20,7 +20,7 @@ services:
           action: sync
 
   postgres:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     restart: always
     ports:
       - "5432:5432"

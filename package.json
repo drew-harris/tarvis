@@ -15,12 +15,13 @@
     "start": "bun run src/index.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.1.13",
     "@openrouter/ai-sdk-provider": "^0.2.2",
     "ai": "^4.1.45",
     "discord.js": "^14.18.0",
     "drizzle-orm": "^0.39.3",
+    "nanoid": "^5.1.0",
     "openai": "^4.85.3",
-    "pg": "^8.13.3",
     "zod": "^3.24.2"
   }
 }

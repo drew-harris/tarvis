@@ -4,8 +4,12 @@ import { generateText, tool } from "ai";
 import { Client, Events, GatewayIntentBits, Message } from "discord.js";
 import { z } from "zod";
 import { searchTenorForGifs } from "./tenor";
+import { migrate } from "drizzle-orm/bun-sql/migrator";
+import { db } from "./db";
+import { remember } from "./remember";
+import { recall } from "./recall";
 
-const messageStorage = new AsyncLocalStorage<Message>();
+export const messageStorage = new AsyncLocalStorage<Message>();
 
 const tools = {
   sendGif: tool({
@@ -28,25 +32,8 @@ const tools = {
     },
   }),
 
-  sendWW: tool({
-    parameters: z.object({
-      nothing: z.string().describe("nothing"),
-    }),
-    description: "Sends the W W",
-    execute: async ({}, { messages }) => {
-      const message = messageStorage.getStore();
-      if (message?.channel.isSendable()) {
-        message.channel.send(`
-WW                  WWW              WW
-  WW             WW   WW           WW
-    WW         WW       WW       WW
-      WW     WW           WW   WW
-        WWWW               WWWW
-          WWW                  WWW
-`);
-      }
-    },
-  }),
+  remember,
+  recall,
 };
 
 // Create a new client instance
@@ -70,8 +57,9 @@ const handleTarvisMessage = async (message: Message) => {
     model: openrouter("google/gemini-2.0-flash-lite-preview-02-05:free"),
     tools,
     system:
-      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. Also if a tool call doesn't have a useful result, such as null or undefined then don't speak again. If a user says 'show me' or 'send up', that also means they wanna see a gif.",
+      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. Also if a tool call doesn't have a useful result, such as null or undefined then don't speak again. If a user says 'show me' or 'send up', that also means they wanna see a gif. If a user asks a question that isn't a basic knowledge or obvious answer, use the recall too to gather more infomation before you answer.",
     prompt: message.content,
+    maxSteps: 2,
   });
   console.log(result.text);
   if (result.text.length > 4) {
@@ -98,3 +86,7 @@ if (!TOKEN) {
 }
 
 client.login(TOKEN);
+
+migrate(db, {
+  migrationsFolder: "./drizzle",
+});
