@@ -1,0 +1,22 @@
+{
+  "name": "tarvis",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@openrouter/ai-sdk-provider": "^0.2.2",
+    "ai": "^4.1.45",
+    "discord.js": "^14.18.0",
+    "openai": "^4.85.3",
+    "zod": "^3.24.2"
+  }
+}

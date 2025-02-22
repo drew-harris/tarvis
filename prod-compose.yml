@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  tarvis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: ['bun', 'run', 'start']
+    networks: 
+      - caddy
+    container_name: tarvis
+    restart: always
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgres://tarvis:tarvis@postgres:5432/tarvis
+    develop:
+      watch:
+        - path: ./src
+          target: /app/src
+          action: sync
+
+  postgres:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: tarvis
+      POSTGRES_PASSWORD: tarvis
+      POSTGRES_DB: tarvis
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - caddy
+
+volumes:
+  postgres_data:
+
+networks:
+  caddy:
+    external: true

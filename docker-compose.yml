@@ -1,0 +1,41 @@
+services:
+  tarvis:
+    profiles:
+      - inside
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks: 
+      - caddy
+    container_name: tarvis
+    restart: always
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgres://tarvis:tarvis@postgres:5432/tarvis
+
+    develop:
+      watch:
+        - path: ./src
+          target: /app/src
+          action: sync
+
+  postgres:
+    image: postgres:17
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: tarvis
+      POSTGRES_PASSWORD: tarvis
+      POSTGRES_DB: tarvis
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - caddy
+
+volumes:
+  postgres_data:
+
+networks:
+  caddy:
+    external: true
