@@ -62,12 +62,11 @@ const handleTarvisMessage = async (message: Message) => {
     maxSteps: 2,
   });
   console.log(result.text);
+  if (result.toolCalls.some((t) => t.toolName === "remember")) {
+    return;
+  }
   if (result.text.length > 4) {
     const message = messageStorage.getStore();
-
-    if (result.toolCalls.some((t) => t.toolName === "remember")) {
-      return;
-    }
 
     message?.reply(result.text);
   }
