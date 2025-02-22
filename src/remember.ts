@@ -32,9 +32,5 @@ export const remember = tool({
       dateRemembered: new Date(),
       userId: userSpecific ? message?.author.id : undefined,
     });
-
-    if (message?.channel.isSendable()) {
-      message.channel.send(`remembering ${thingToRemember}`);
-    }
   },
 });
