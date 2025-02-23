@@ -55,7 +55,7 @@ export const recallFromMessage = async (message: Message) => {
       similarity,
     })
     .from(schema.memories)
-    .where(gt(similarity, 0.5))
+    .where(gt(similarity, 0.3))
     .orderBy((t) => desc(t.similarity))
     .limit(3);
 
