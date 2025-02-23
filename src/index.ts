@@ -119,7 +119,7 @@ const handleTarvisMessage = async (message: Message) => {
     model: openrouter("google/gemini-2.0-flash-lite-preview-02-05:free"),
     tools,
     system:
-      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. If a user says 'show me' or 'send up', that also means they wanna see a gif. If there is background information given before the prompt/question try to use it.",
+      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. If a user says 'show me' or 'send up', that also means they wanna see a gif. If there is background information given before the prompt/question try to use it. Only send a gif if a user asks to see a gif or it would exceptionally fit the situation with the background context given, otherwise just be helpful",
     prompt: contentMessage,
     maxSteps: 1,
   });
