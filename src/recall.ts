@@ -1,6 +1,5 @@
 import { openai } from "@ai-sdk/openai";
 import { embed, tool } from "ai";
-import { messageStorage } from ".";
 import { z } from "zod";
 import { cosineDistance, gt, sql, desc, getTableColumns } from "drizzle-orm";
 import { db, schema } from "./db";
@@ -12,9 +11,7 @@ export const recall = tool({
   description:
     "Remembers a thing. Recalls a memory. Use whenever someone asks a question that you might need to search for an answer to. Will be highly useful",
 
-  execute: async ({ thingToRecall }, { messages }) => {
-    const message = messageStorage.getStore();
-
+  execute: async ({ thingToRecall }) => {
     const { embedding } = await embed({
       model: openai.embedding("text-embedding-3-small"),
       value: thingToRecall,

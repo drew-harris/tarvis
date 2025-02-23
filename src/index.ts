@@ -17,7 +17,7 @@ const tools = {
       query: z.string().describe("the search query to search gifs by"),
     }),
     description: "Sends a gif from a query",
-    execute: async ({ query }, { messages }) => {
+    execute: async ({ query }) => {
       const message = messageStorage.getStore();
       console.log("sending gif from query ", query);
       if (message?.channel.isSendable()) {
@@ -41,6 +41,8 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildEmojisAndStickers,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
@@ -50,6 +52,24 @@ const client = new Client({
 // When the client is ready, run this code (only once)
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+  client.on("messageReactionAdd", async (m) => {
+    console.log("emoji added");
+    // If brain emoji is added, run the brain
+    console.log("name:", m.emoji.name);
+    if (m.emoji.name === "🧠") {
+      console.log("brain emoji added");
+    }
+  });
+
+  client.on("messageCreate", async (m: Message) => {
+    console.log("message created");
+    console.log(m.content);
+    if (m.content.startsWith("hey tarvis") || m.content.startsWith("tarvis")) {
+      await messageStorage.run(m, async () => {
+        await handleTarvisMessage(m);
+      });
+    }
+  });
 });
 
 const handleTarvisMessage = async (message: Message) => {
@@ -67,16 +87,6 @@ const handleTarvisMessage = async (message: Message) => {
     message?.reply(result.text);
   }
 };
-
-client.on("messageCreate", async (m: Message) => {
-  console.log("message created");
-  console.log(m.content);
-  if (m.content.startsWith("hey tarvis") || m.content.startsWith("tarvis")) {
-    await messageStorage.run(m, async () => {
-      await handleTarvisMessage(m);
-    });
-  }
-});
 
 // Log in to Discord with your client's token
 const TOKEN = process.env.DISCORD_TOKEN;
