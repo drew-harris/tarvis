@@ -6,7 +6,7 @@ import { z } from "zod";
 import { searchTenorForGifs } from "./tenor";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
 import { db } from "./db";
-import { recall } from "./recall";
+import { recallFromMessage } from "./recall";
 import { saveMemory } from "./remember";
 
 export const messageStorage = new AsyncLocalStorage<Message>();
@@ -23,7 +23,7 @@ const tools = {
       if (message?.channel.isSendable()) {
         try {
           const url = await searchTenorForGifs(query);
-          message.channel.send(url);
+          message.reply(url);
         } catch (e) {
           console.log(e);
           message?.reply("No gifs found");
@@ -31,8 +31,6 @@ const tools = {
       }
     },
   }),
-
-  recall,
 };
 
 // Create a new client instance
@@ -88,7 +86,7 @@ client.once(Events.ClientReady, (readyClient) => {
   client.on("messageCreate", async (m: Message) => {
     console.log("message created");
     console.log(m.content);
-    if (m.content.startsWith("hey tarvis") || m.content.startsWith("tarvis")) {
+    if (m.content.startsWith("hey tarvis")) {
       await messageStorage.run(m, async () => {
         await handleTarvisMessage(m);
       });
@@ -97,15 +95,43 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 const handleTarvisMessage = async (message: Message) => {
+  const backgroundInfo = await recallFromMessage(message);
+
+  let contentMessage = message.content;
+  if (message.content.startsWith("hey tarvis")) {
+    contentMessage = message.content.substring(10);
+  }
+
+  if (backgroundInfo.length > 0) {
+    contentMessage =
+      "Background context:\n" +
+      backgroundInfo.join("\n") +
+      "\n" +
+      "\n" +
+      contentMessage;
+  }
+
+  console.log("--------------prompt--------------");
+  console.log(contentMessage);
+  console.log("--------------\\prompt--------------");
+
   const result = await generateText({
-    model: openrouter("google/gemini-2.0-flash-001"),
+    model: openrouter("google/gemini-2.0-flash-lite-preview-02-05:free"),
     tools,
     system:
-      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. Also if a tool call doesn't have a useful result, such as null or undefined then don't speak again. If a user says 'show me' or 'send up', that also means they wanna see a gif. If a user asks a question that isn't a basic knowledge or obvious answer, use the recall tool to gather more infomation before you answer.",
-    prompt: message.content,
+      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. If a user says 'show me' or 'send up', that also means they wanna see a gif. If there is background information given before the prompt/question try to use it.",
+    prompt: contentMessage,
     maxSteps: 1,
   });
-  console.log(result.text);
+
+  console.log("FINISH REASON", result.finishReason);
+
+  if (result.warnings?.length) {
+    console.log("warnings", result.warnings);
+    return message?.reply("Warnings: " + result.warnings.toString());
+  }
+
+  console.log("response text", result.text);
   if (result.text.length > 4) {
     const message = messageStorage.getStore();
     message?.reply(result.text);
