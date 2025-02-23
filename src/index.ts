@@ -6,8 +6,8 @@ import { z } from "zod";
 import { searchTenorForGifs } from "./tenor";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
 import { db } from "./db";
-import { remember } from "./remember";
 import { recall } from "./recall";
+import { saveMemory } from "./remember";
 
 export const messageStorage = new AsyncLocalStorage<Message>();
 
@@ -32,7 +32,6 @@ const tools = {
     },
   }),
 
-  remember,
   recall,
 };
 
@@ -52,12 +51,37 @@ const client = new Client({
 // When the client is ready, run this code (only once)
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-  client.on("messageReactionAdd", async (m) => {
-    console.log("emoji added");
-    // If brain emoji is added, run the brain
-    console.log("name:", m.emoji.name);
-    if (m.emoji.name === "🧠") {
+  client.on(Events.MessageReactionAdd, async (reaction, user) => {
+    if (reaction.partial) {
+      try {
+        await reaction.fetch();
+      } catch (error) {
+        console.error("Something went wrong when fetching the message:", error);
+        return;
+      }
+    }
+
+    if (user.bot) return; // Ignore bot reactions
+
+    if (reaction.emoji.name === "🧠") {
       console.log("brain emoji added");
+      // Fetch the message if it's partial
+      if (reaction.message.partial) {
+        try {
+          await reaction.message.fetch();
+        } catch (error) {
+          console.error(
+            "Something went wrong when fetching the message:",
+            error,
+          );
+          return;
+        }
+      }
+
+      if (reaction.message.partial) {
+        return;
+      }
+      await saveMemory(reaction.message);
     }
   });
 
@@ -77,9 +101,9 @@ const handleTarvisMessage = async (message: Message) => {
     model: openrouter("google/gemini-2.0-flash-001"),
     tools,
     system:
-      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. Also if a tool call doesn't have a useful result, such as null or undefined then don't speak again. If a user says 'show me' or 'send up', that also means they wanna see a gif. If a user asks a question that isn't a basic knowledge or obvious answer, use the recall too to gather more infomation before you answer.",
+      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. Also if a tool call doesn't have a useful result, such as null or undefined then don't speak again. If a user says 'show me' or 'send up', that also means they wanna see a gif. If a user asks a question that isn't a basic knowledge or obvious answer, use the recall tool to gather more infomation before you answer.",
     prompt: message.content,
-    maxSteps: 2,
+    maxSteps: 1,
   });
   console.log(result.text);
   if (result.text.length > 4) {
