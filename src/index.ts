@@ -102,24 +102,21 @@ const handleTarvisMessage = async (message: Message) => {
     contentMessage = message.content.substring(10);
   }
 
-  if (backgroundInfo.length > 0) {
-    contentMessage =
-      "Background context:\n" +
-      backgroundInfo.join("\n") +
-      "\n" +
-      "\n" +
-      contentMessage;
-  }
-
   console.log("--------------prompt--------------");
   console.log(contentMessage);
   console.log("--------------\\prompt--------------");
 
+  let system =
+    "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. If a user says 'show me' or 'send up', that also means they wanna see a gif. If there is background information given before the prompt/question try to use it. Only send a gif if a user asks to see a gif or it would exceptionally fit the situation with the background context given, otherwise just be helpful";
+
+  if (backgroundInfo.length > 0) {
+    system += "\n\nBackground context:\n" + backgroundInfo.join("\n");
+  }
+
   const result = await generateText({
     model: openrouter("google/gemini-2.0-flash-lite-preview-02-05:free"),
     tools,
-    system:
-      "You are a discord bot that makes tool calls to accomplish tasks. If you don't find any tools to be useful then just respond normally. If a user says 'show me' or 'send up', that also means they wanna see a gif. If there is background information given before the prompt/question try to use it. Only send a gif if a user asks to see a gif or it would exceptionally fit the situation with the background context given, otherwise just be helpful",
+    system,
     prompt: contentMessage,
     maxSteps: 1,
   });
